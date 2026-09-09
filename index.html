@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Code Review – Automated Code Analysis with Gemini, Claude & OpenAI</title>
+  <meta name="description" content="AI Code Review v4.6.8 – Automated code reviews using Google Gemini, Anthropic Claude, and OpenAI. Supports 15+ review types across 9 languages and frameworks." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ─── NAV ─── -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="logo-icon">⚙️</span>
+        <span class="logo-text">AI<span class="accent">Code</span>Review</span>
+        <span class="version-badge">v4.6.8</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#review-types">Review Types</a></li>
+        <li><a href="#languages">Languages</a></li>
+        <li><a href="#models">Models</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+        <li><a href="#demo" class="nav-cta" id="try-demo-nav">Try Demo</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero" id="home">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="container hero-content">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        TypeScript · Multi-Model · 15+ Review Types
+      </div>
+      <h1 class="hero-title">
+        Automated Code Reviews<br />
+        <span class="gradient-text">Powered by AI</span>
+      </h1>
+      <p class="hero-subtitle">
+        Harness Google Gemini, Anthropic Claude, and OpenAI to deliver deep, actionable
+        code reviews across security, performance, architecture and more — in seconds.
+      </p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn btn-primary" id="hero-demo-btn">
+          <span>🚀</span> Try Live Demo
+        </a>
+        <a href="#quickstart" class="btn btn-ghost">
+          <span>📖</span> Quick Start
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">15+</span>
+          <span class="stat-label">Review Types</span>
+        </div>
+        <div class="stat-div"></div>
+        <div class="stat">
+          <span class="stat-num">9</span>
+          <span class="stat-label">Languages</span>
+        </div>
+        <div class="stat-div"></div>
+        <div class="stat">
+          <span class="stat-num">95%</span>
+          <span class="stat-label">Token Reduction</span>
+        </div>
+        <div class="stat-div"></div>
+        <div class="stat">
+          <span class="stat-num">4</span>
+          <span class="stat-label">AI Providers</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll-indicator">
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- ─── PROVIDER LOGOS ─── -->
+  <section class="providers-bar">
+    <div class="container">
+      <p class="providers-label">Powered by leading AI providers</p>
+      <div class="providers-list">
+        <div class="provider-chip">🔷 Google Gemini</div>
+        <div class="provider-chip">🟣 Anthropic Claude</div>
+        <div class="provider-chip">⚫ OpenAI</div>
+        <div class="provider-chip">🔵 OpenRouter</div>
+        <div class="provider-chip">🦜 LangChain</div>
+        <div class="provider-chip">🌳 TreeSitter</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES ─── -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Core Features</span>
+        <h2 class="section-title">Everything you need for<br /><span class="gradient-text">world-class code review</span></h2>
+        <p class="section-subtitle">Combine the power of multiple AI models with intelligent code analysis to identify issues before they reach production.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card feature-card--wide">
+          <div class="feature-icon">🧠</div>
+          <h3>AI-Guided Semantic Chunking</h3>
+          <p>Revolutionary TreeSitter-based code analysis with <strong>95%+ token reduction</strong>. Solves context limit problems, reducing typical 196K+ token reviews to ~4K tokens with 5 intelligent chunking strategies.</p>
+          <div class="feature-tag-row">
+            <span class="tag">TreeSitter</span>
+            <span class="tag">95% Reduction</span>
+            <span class="tag">Smart Chunking</span>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔑</div>
+          <h3>API Key Validation</h3>
+          <p>Automatically validates API keys before running reviews. Live validation with interactive key recovery options.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Interactive Mode</h3>
+          <p>Process review results interactively — automatically implement high-priority fixes or confirm medium/low priority ones.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📁</div>
+          <h3>Directory Support</h3>
+          <p>Review entire directories and subdirectories in one command. Consolidated reviews across multiple files.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💰</div>
+          <h3>Token & Cost Estimation</h3>
+          <p>Estimate token usage and cost before large operations. Smart multi-pass confirmation with cost transparency.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔌</div>
+          <h3>MCP Integration</h3>
+          <p>Model Context Protocol support — use directly from Claude Desktop for seamless AI assistant workflow.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📚</div>
+          <h3>Library API</h3>
+          <p>Use as a Node.js library in your own apps. Perfect for CI/CD pipelines, Next.js, or Express integrations.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>Project Context</h3>
+          <p>Include project documentation in the review context. Dependency security analysis with severity ratings and CVE IDs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── REVIEW TYPES ─── -->
+  <section class="section section--dark" id="review-types">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Review Types</span>
+        <h2 class="section-title">15+ Specialized<br /><span class="gradient-text">Review Modes</span></h2>
+        <p class="section-subtitle">Focus on exactly what matters — from a quick bug scan to a full architectural assessment.</p>
+      </div>
+      <div class="review-types-grid" id="review-types-grid">
+        <div class="review-card" data-type="comprehensive">
+          <div class="review-card-header">
+            <span class="review-icon">⭐</span>
+            <span class="review-new-badge">NEW</span>
+          </div>
+          <h3>comprehensive</h3>
+          <p>Complete analysis combining quick-fixes, security, performance, and architecture in one pass.</p>
+          <code class="review-cmd">--type comprehensive</code>
+        </div>
+        <div class="review-card" data-type="quick-fixes">
+          <div class="review-card-header"><span class="review-icon">⚡</span></div>
+          <h3>quick-fixes</h3>
+          <p>Fast issue identification and recommendations for immediate improvements.</p>
+          <code class="review-cmd">--type quick-fixes</code>
+        </div>
+        <div class="review-card" data-type="architectural">
+          <div class="review-card-header"><span class="review-icon">🏛️</span></div>
+          <h3>architectural</h3>
+          <p>Deep structural analysis of design patterns, dependencies, and system architecture.</p>
+          <code class="review-cmd">--type architectural</code>
+        </div>
+        <div class="review-card" data-type="security">
+          <div class="review-card-header"><span class="review-icon">🔒</span></div>
+          <h3>security</h3>
+          <p>OWASP-aligned vulnerability detection with severity ratings, CVE IDs, and remediation steps.</p>
+          <code class="review-cmd">--type security</code>
+        </div>
+        <div class="review-card" data-type="performance">
+          <div class="review-card-header"><span class="review-icon">📈</span></div>
+          <h3>performance</h3>
+          <p>Identify bottlenecks, N+1 queries, memory leaks, and runtime efficiency issues.</p>
+          <code class="review-cmd">--type performance</code>
+        </div>
+        <div class="review-card" data-type="unused-code">
+          <div class="review-card-header"><span class="review-icon">🧹</span></div>
+          <h3>unused-code</h3>
+          <p>Dead code detection and cleanup recommendations to reduce technical debt.</p>
+          <code class="review-cmd">--type unused-code</code>
+        </div>
+        <div class="review-card" data-type="best-practices">
+          <div class="review-card-header"><span class="review-icon">✅</span></div>
+          <h3>best-practices</h3>
+          <p>Idiomatic code patterns, conventions, and language-specific best practices analysis.</p>
+          <code class="review-cmd">--type best-practices</code>
+        </div>
+        <div class="review-card" data-type="evaluation">
+          <div class="review-card-header"><span class="review-icon">🎓</span></div>
+          <h3>evaluation</h3>
+          <p>Comprehensive code evaluation with developer skill assessment (Beginner → Expert).</p>
+          <code class="review-cmd">--type evaluation</code>
+        </div>
+        <div class="review-card" data-type="coding-test">
+          <div class="review-card-header"><span class="review-icon">🤖</span></div>
+          <h3>coding-test</h3>
+          <p>Coding test evaluation with assignment scoring and AI content detection.</p>
+          <code class="review-cmd">--type coding-test</code>
+        </div>
+        <div class="review-card" data-type="extract-patterns">
+          <div class="review-card-header"><span class="review-icon">🔍</span></div>
+          <h3>extract-patterns</h3>
+          <p>Code pattern analysis with validation and structured output for reusable patterns.</p>
+          <code class="review-cmd">--type extract-patterns</code>
+        </div>
+        <div class="review-card" data-type="ai-integration">
+          <div class="review-card-header"><span class="review-icon">🤝</span></div>
+          <h3>ai-integration</h3>
+          <p>AI-assisted development analysis and recommendations for modern AI workflows.</p>
+          <code class="review-cmd">--type ai-integration</code>
+        </div>
+        <div class="review-card" data-type="cloud-native">
+          <div class="review-card-header"><span class="review-icon">☁️</span></div>
+          <h3>cloud-native</h3>
+          <p>Cloud architecture assessment and optimization for containers, microservices, and cloud platforms.</p>
+          <code class="review-cmd">--type cloud-native</code>
+        </div>
+        <div class="review-card" data-type="developer-experience">
+          <div class="review-card-header"><span class="review-icon">🧑‍💻</span></div>
+          <h3>developer-experience</h3>
+          <p>DX evaluation — tooling, documentation, onboarding and developer ergonomics.</p>
+          <code class="review-cmd">--type developer-experience</code>
+        </div>
+        <div class="review-card" data-type="consolidated">
+          <div class="review-card-header"><span class="review-icon">📦</span></div>
+          <h3>consolidated</h3>
+          <p>Consolidated review combining multiple review passes into one comprehensive report.</p>
+          <code class="review-cmd">--type consolidated</code>
+        </div>
+        <div class="review-card" data-type="focused-unused-code">
+          <div class="review-card-header"><span class="review-icon">🎯</span></div>
+          <h3>focused-unused-code</h3>
+          <p>Targeted analysis focusing specifically on unused imports, variables, and dead code paths.</p>
+          <code class="review-cmd">--type focused-unused-code</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── LANGUAGES ─── -->
+  <section class="section" id="languages">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Language Support</span>
+        <h2 class="section-title">9 Languages,<br /><span class="gradient-text">All Frameworks</span></h2>
+        <p class="section-subtitle">Automatic project detection with specialized templates for every major language and framework.</p>
+      </div>
+      <div class="languages-grid">
+        <div class="lang-card" id="lang-ts">
+          <div class="lang-header">
+            <span class="lang-icon">📘</span>
+            <div>
+              <h3>TypeScript</h3>
+              <span class="lang-detect">Auto-detect: .ts, .tsx</span>
+            </div>
+            <span class="lang-confidence high">High</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">React</span>
+            <span class="fw-tag">Next.js</span>
+            <span class="fw-tag">Angular</span>
+            <span class="fw-tag">Vue</span>
+          </div>
+          <p class="lang-desc">Type system analysis, generics, decorators, and modern TS 5.x features with full framework-specific templates.</p>
+        </div>
+        <div class="lang-card" id="lang-js">
+          <div class="lang-header">
+            <span class="lang-icon">💛</span>
+            <div>
+              <h3>JavaScript</h3>
+              <span class="lang-detect">Auto-detect: .js, .jsx</span>
+            </div>
+            <span class="lang-confidence high">High</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">React</span>
+            <span class="fw-tag">Next.js</span>
+            <span class="fw-tag">Vue</span>
+            <span class="fw-tag">Node.js</span>
+          </div>
+          <p class="lang-desc">ES6+, async patterns, and framework-specific best practices for modern JavaScript projects.</p>
+        </div>
+        <div class="lang-card" id="lang-dart">
+          <div class="lang-header">
+            <span class="lang-icon">🎯</span>
+            <div>
+              <h3>Dart / Flutter</h3>
+              <span class="lang-detect">Auto-detect: pubspec.yaml</span>
+            </div>
+            <span class="lang-confidence high">High</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">Flutter</span>
+          </div>
+          <p class="lang-desc">Null safety, async/await, widget lifecycle, state management (Riverpod, BLoC, Provider), and platform channels.</p>
+        </div>
+        <div class="lang-card" id="lang-python">
+          <div class="lang-header">
+            <span class="lang-icon">🐍</span>
+            <div>
+              <h3>Python</h3>
+              <span class="lang-detect">Auto-detect: requirements.txt</span>
+            </div>
+            <span class="lang-confidence high">High</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">Django</span>
+            <span class="fw-tag">Flask</span>
+            <span class="fw-tag">FastAPI</span>
+          </div>
+          <p class="lang-desc">PEP compliance, type hints, context managers, async/await, and web framework patterns.</p>
+        </div>
+        <div class="lang-card" id="lang-ruby">
+          <div class="lang-header">
+            <span class="lang-icon">💎</span>
+            <div>
+              <h3>Ruby</h3>
+              <span class="lang-detect">Auto-detect: Gemfile</span>
+            </div>
+            <span class="lang-confidence high">High</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">Ruby on Rails</span>
+          </div>
+          <p class="lang-desc">Metaprogramming, Rails MVC, ActiveRecord optimization, N+1 query detection, and security compliance.</p>
+        </div>
+        <div class="lang-card" id="lang-php">
+          <div class="lang-header">
+            <span class="lang-icon">🐘</span>
+            <div>
+              <h3>PHP</h3>
+              <span class="lang-detect">Auto-detect: composer.json</span>
+            </div>
+            <span class="lang-confidence high">High</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">Laravel</span>
+            <span class="fw-tag">Symfony</span>
+          </div>
+          <p class="lang-desc">Modern PHP 8.x, framework patterns, ORM usage, and security vulnerability detection.</p>
+        </div>
+        <div class="lang-card" id="lang-go">
+          <div class="lang-header">
+            <span class="lang-icon">🐹</span>
+            <div>
+              <h3>Go / Golang</h3>
+              <span class="lang-detect">Auto-detect: go.mod</span>
+            </div>
+            <span class="lang-confidence high">High</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">Gin</span>
+            <span class="fw-tag">Echo</span>
+            <span class="fw-tag">Fiber</span>
+          </div>
+          <p class="lang-desc">Idiomatic Go, goroutines, channels, interfaces, error handling, and concurrency patterns.</p>
+        </div>
+        <div class="lang-card" id="lang-java">
+          <div class="lang-header">
+            <span class="lang-icon">☕</span>
+            <div>
+              <h3>Java</h3>
+              <span class="lang-detect">Auto-detect: .java files</span>
+            </div>
+            <span class="lang-confidence medium">Medium</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">Spring</span>
+            <span class="fw-tag">Spring Boot</span>
+          </div>
+          <p class="lang-desc">Enterprise patterns, dependency injection, Spring ecosystem, and design pattern analysis.</p>
+        </div>
+        <div class="lang-card" id="lang-rust">
+          <div class="lang-header">
+            <span class="lang-icon">🦀</span>
+            <div>
+              <h3>Rust</h3>
+              <span class="lang-detect">Auto-detect: Cargo.toml</span>
+            </div>
+            <span class="lang-confidence high">High</span>
+          </div>
+          <div class="lang-frameworks">
+            <span class="fw-tag">Actix</span>
+            <span class="fw-tag">Rocket</span>
+            <span class="fw-tag">Axum</span>
+          </div>
+          <p class="lang-desc">Memory safety, ownership model, lifetimes, async programming, and zero-cost abstractions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── AI MODELS ─── -->
+  <section class="section section--dark" id="models">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">AI Models</span>
+        <h2 class="section-title">Choose your<br /><span class="gradient-text">AI Powerhouse</span></h2>
+        <p class="section-subtitle">Support for the latest models from every leading AI provider — swap with a single flag.</p>
+      </div>
+      <div class="models-tabs">
+        <button class="model-tab active" data-provider="gemini" id="tab-gemini">🔷 Google Gemini</button>
+        <button class="model-tab" data-provider="anthropic" id="tab-anthropic">🟣 Anthropic Claude</button>
+        <button class="model-tab" data-provider="openai" id="tab-openai">⚫ OpenAI</button>
+        <button class="model-tab" data-provider="openrouter" id="tab-openrouter">🔵 OpenRouter</button>
+      </div>
+      <div class="models-panel" id="models-panel">
+        <div class="model-list" data-provider="gemini">
+          <div class="model-item active-model">
+            <div class="model-info">
+              <span class="model-name">gemini-2.5-pro</span>
+              <span class="model-rec">⭐ Recommended</span>
+            </div>
+            <code class="model-flag">gemini:gemini-2.5-pro</code>
+          </div>
+          <div class="model-item">
+            <div class="model-info"><span class="model-name">gemini-2.0-flash</span></div>
+            <code class="model-flag">gemini:gemini-2.0-flash</code>
+          </div>
+          <div class="model-item">
+            <div class="model-info"><span class="model-name">gemini-1.5-pro</span></div>
+            <code class="model-flag">gemini:gemini-1.5-pro</code>
+          </div>
+        </div>
+        <div class="model-list hidden" data-provider="anthropic">
+          <div class="model-item active-model">
+            <div class="model-info">
+              <span class="model-name">claude-4-sonnet</span>
+              <span class="model-rec">⭐ Recommended</span>
+            </div>
+            <code class="model-flag">anthropic:claude-4-sonnet</code>
+          </div>
+          <div class="model-item">
+            <div class="model-info"><span class="model-name">claude-4-opus</span></div>
+            <code class="model-flag">anthropic:claude-4-opus</code>
+          </div>
+          <div class="model-item">
+            <div class="model-info"><span class="model-name">claude-3-5-sonnet</span></div>
+            <code class="model-flag">anthropic:claude-3-5-sonnet</code>
+          </div>
+        </div>
+        <div class="model-list hidden" data-provider="openai">
+          <div class="model-item active-model">
+            <div class="model-info">
+              <span class="model-name">gpt-4o</span>
+              <span class="model-rec">⭐ Recommended</span>
+            </div>
+            <code class="model-flag">openai:gpt-4o</code>
+          </div>
+          <div class="model-item">
+            <div class="model-info"><span class="model-name">gpt-4-turbo</span></div>
+            <code class="model-flag">openai:gpt-4-turbo</code>
+          </div>
+        </div>
+        <div class="model-list hidden" data-provider="openrouter">
+          <div class="model-item active-model">
+            <div class="model-info">
+              <span class="model-name">anthropic/claude-3.5-sonnet</span>
+              <span class="model-rec">⭐ Recommended</span>
+            </div>
+            <code class="model-flag">openrouter:anthropic/claude-3.5-sonnet</code>
+          </div>
+          <div class="model-item">
+            <div class="model-info"><span class="model-name">google/gemini-pro-1.5</span></div>
+            <code class="model-flag">openrouter:google/gemini-pro-1.5</code>
+          </div>
+          <div class="model-item">
+            <div class="model-info"><span class="model-name">openai/gpt-4o</span></div>
+            <code class="model-flag">openrouter:openai/gpt-4o</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── QUICK START ─── -->
+  <section class="section" id="quickstart">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Quick Start</span>
+        <h2 class="section-title">Up and running<br /><span class="gradient-text">in 3 steps</span></h2>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <h3>Install</h3>
+          <p>Install globally via npm or pnpm:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="copy-btn" data-code="npm install -g @bobmatnyc/ai-code-review" id="copy-install">Copy</button>
+            </div>
+            <pre><code># Using npm
+npm install -g @bobmatnyc/ai-code-review
+
+# Using pnpm (recommended)
+pnpm add -g @bobmatnyc/ai-code-review</code></pre>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <h3>Configure API Keys</h3>
+          <p>Create a <code>.env.local</code> file in your project root:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">.env.local</span>
+              <button class="copy-btn" data-code="AI_CODE_REVIEW_MODEL=gemini:gemini-2.5-pro&#10;AI_CODE_REVIEW_GOOGLE_API_KEY=your_key_here" id="copy-env">Copy</button>
+            </div>
+            <pre><code># Model selection
+AI_CODE_REVIEW_MODEL=gemini:gemini-2.5-pro
+
+# API Keys (choose your provider)
+AI_CODE_REVIEW_GOOGLE_API_KEY=your_key_here
+AI_CODE_REVIEW_ANTHROPIC_API_KEY=your_key_here
+AI_CODE_REVIEW_OPENROUTER_API_KEY=your_key_here</code></pre>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <h3>Run Your First Review</h3>
+          <p>Run a comprehensive review of your codebase:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="copy-btn" data-code="ai-code-review . --type comprehensive" id="copy-run">Copy</button>
+            </div>
+            <pre><code># Review current directory
+ai-code-review . --type comprehensive
+
+# Security review with specific language
+ai-code-review src --type security --language typescript
+
+# Estimate tokens & cost first
+ai-code-review . --estimate</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Config precedence -->
+      <div class="config-box">
+        <h3>⚙️ Configuration Precedence</h3>
+        <div class="config-steps">
+          <div class="config-step c1">
+            <span class="c-num">1</span>
+            <span>CLI flags <em>(highest)</em></span>
+          </div>
+          <div class="c-arrow">→</div>
+          <div class="config-step c2">
+            <span class="c-num">2</span>
+            <span>Project config <code>.ai-code-review/config.yaml</code></span>
+          </div>
+          <div class="c-arrow">→</div>
+          <div class="config-step c3">
+            <span class="c-num">3</span>
+            <span>Environment variables</span>
+          </div>
+          <div class="c-arrow">→</div>
+          <div class="config-step c4">
+            <span class="c-num">4</span>
+            <span>Defaults <em>(lowest)</em></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── DEMO ─── -->
+  <section class="section section--dark" id="demo">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Live Demo</span>
+        <h2 class="section-title">Try the<br /><span class="gradient-text">Review Simulator</span></h2>
+        <p class="section-subtitle">Paste your code, pick a review type and model, and see the kind of output you'd get.</p>
+      </div>
+      <div class="demo-layout">
+        <!-- Left: Controls -->
+        <div class="demo-controls">
+          <div class="control-group">
+            <label for="demo-review-type">Review Type</label>
+            <select id="demo-review-type">
+              <option value="comprehensive">⭐ comprehensive</option>
+              <option value="quick-fixes">⚡ quick-fixes</option>
+              <option value="security">🔒 security</option>
+              <option value="architectural">🏛️ architectural</option>
+              <option value="performance">📈 performance</option>
+              <option value="unused-code">🧹 unused-code</option>
+              <option value="best-practices">✅ best-practices</option>
+              <option value="evaluation">🎓 evaluation</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="demo-model">AI Model</label>
+            <select id="demo-model">
+              <option value="gemini:gemini-2.5-pro">🔷 Gemini 2.5 Pro</option>
+              <option value="anthropic:claude-4-sonnet">🟣 Claude 4 Sonnet</option>
+              <option value="openai:gpt-4o">⚫ GPT-4o</option>
+              <option value="openrouter:anthropic/claude-3.5-sonnet">🔵 OpenRouter / Claude 3.5</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="demo-language">Language</label>
+            <select id="demo-language">
+              <option value="typescript">TypeScript</option>
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+              <option value="ruby">Ruby</option>
+              <option value="go">Go</option>
+              <option value="php">PHP</option>
+              <option value="dart">Dart / Flutter</option>
+              <option value="java">Java</option>
+              <option value="rust">Rust</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="demo-code">Paste Code</label>
+            <textarea id="demo-code" rows="10" placeholder="// Paste your code here...
+function fetchUser(id) {
+  const query = 'SELECT * FROM users WHERE id=' + id;
+  return db.query(query);
+}"></textarea>
+          </div>
+          <button class="btn btn-primary btn-full" id="run-demo-btn">
+            <span id="demo-btn-icon">🚀</span>
+            <span id="demo-btn-text">Run Review</span>
+          </button>
+        </div>
+
+        <!-- Right: Output -->
+        <div class="demo-output" id="demo-output">
+          <div class="output-header">
+            <span class="output-title">Review Output</span>
+            <span class="output-meta" id="output-meta">Select options and click Run Review</span>
+          </div>
+          <div class="output-body" id="output-body">
+            <div class="output-placeholder">
+              <div class="placeholder-icon">🔍</div>
+              <p>Your AI code review results will appear here.</p>
+              <p class="hint">Configure the options on the left and click <strong>Run Review</strong>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── MCP SECTION ─── -->
+  <section class="section" id="mcp">
+    <div class="container">
+      <div class="mcp-layout">
+        <div class="mcp-text">
+          <span class="section-tag">MCP Integration</span>
+          <h2 class="section-title">Use directly in<br /><span class="gradient-text">Claude Desktop</span></h2>
+          <p>AI Code Review supports the <strong>Model Context Protocol (MCP)</strong> — use it seamlessly from any MCP-compatible AI assistant.</p>
+          <ul class="mcp-tools">
+            <li><span class="tool-badge">code-review</span> Comprehensive code analysis</li>
+            <li><span class="tool-badge">pr-review</span> Pull Request diff analysis</li>
+            <li><span class="tool-badge">git-analysis</span> Git history & pattern analysis</li>
+            <li><span class="tool-badge">file-analysis</span> Individual file metrics</li>
+          </ul>
+        </div>
+        <div class="mcp-code-side">
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">claude_desktop_config.json</span>
+              <button class="copy-btn" id="copy-mcp">Copy</button>
+            </div>
+            <pre><code id="mcp-code">{
+  "mcpServers": {
+    "ai-code-review": {
+      "command": "ai-code-review",
+      "args": ["mcp"]
+    }
+  }
+}</code></pre>
+          </div>
+          <div class="mcp-examples">
+            <p class="mcp-examples-title">Example prompts in Claude:</p>
+            <div class="mcp-example">"Review this directory for security issues"</div>
+            <div class="mcp-example">"Analyze the git commit history for patterns"</div>
+            <div class="mcp-example">"Perform a comprehensive code review of src/"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── LIBRARY API ─── -->
+  <section class="section section--dark" id="library">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Library API</span>
+        <h2 class="section-title">Integrate into<br /><span class="gradient-text">your own apps</span></h2>
+        <p class="section-subtitle">Use AI Code Review as a Node.js library in Next.js routes, Express servers, or CI/CD pipelines.</p>
+      </div>
+      <div class="lib-tabs">
+        <button class="lib-tab active" data-tab="basic" id="lib-tab-basic">Basic Usage</button>
+        <button class="lib-tab" data-tab="advanced" id="lib-tab-advanced">Advanced</button>
+        <button class="lib-tab" data-tab="nextjs" id="lib-tab-nextjs">Next.js API Route</button>
+      </div>
+      <div class="lib-panel">
+        <div class="code-block lib-code" data-tab="basic">
+          <div class="code-header">
+            <span class="code-lang">typescript</span>
+            <button class="copy-btn" id="copy-lib-basic">Copy</button>
+          </div>
+          <pre><code>import { performCodeReview } from '@bobmatnyc/ai-code-review/lib';
+
+const result = await performCodeReview({
+  target: './src',
+  config: {
+    model: 'openrouter:anthropic/claude-3.5-sonnet',
+    reviewType: 'security',
+    apiKeys: { openrouter: 'your-api-key-here' },
+    outputFormat: 'json'
+  },
+  options: {
+    maxFiles: 50,
+    onProgress: (progress) => {
+      console.log(`${progress.stage}: ${progress.progress}%`);
+    }
+  }
+});
+
+console.log('Review completed:', result);</code></pre>
+        </div>
+        <div class="code-block lib-code hidden" data-tab="advanced">
+          <div class="code-header">
+            <span class="code-lang">typescript</span>
+            <button class="copy-btn" id="copy-lib-advanced">Copy</button>
+          </div>
+          <pre><code>import {
+  orchestrateReview,
+  createAIClient,
+  getAvailableModels,
+  validateLibraryConfig
+} from '@bobmatnyc/ai-code-review/lib';
+
+// Test model connection
+const testResult = await testModelConnection(
+  'openrouter:anthropic/claude-3.5-sonnet'
+);
+if (!testResult.success) {
+  console.error('Model test failed:', testResult.error);
+}
+
+// Get available models
+const models = getAvailableModels();
+console.log('Available models:', models);
+
+// Validate configuration
+const validation = validateLibraryConfig(config);
+if (!validation.valid) {
+  console.error('Config errors:', validation.errors);
+}</code></pre>
+        </div>
+        <div class="code-block lib-code hidden" data-tab="nextjs">
+          <div class="code-header">
+            <span class="code-lang">typescript</span>
+            <button class="copy-btn" id="copy-lib-nextjs">Copy</button>
+          </div>
+          <pre><code>// pages/api/review.ts (Next.js)
+import { performCodeReview } from '@bobmatnyc/ai-code-review/lib';
+
+export default async function handler(req, res) {
+  try {
+    const result = await performCodeReview({
+      target: req.body.target,
+      config: {
+        model: req.body.model,
+        apiKeys: {
+          openrouter: process.env.OPENROUTER_API_KEY
+        }
+      }
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CTA ─── -->
+  <section class="section cta-section">
+    <div class="container">
+      <div class="cta-card">
+        <div class="cta-orb cta-orb-1"></div>
+        <div class="cta-orb cta-orb-2"></div>
+        <h2>Ready to review smarter?</h2>
+        <p>Install AI Code Review today and ship higher-quality code — faster.</p>
+        <div class="cta-actions">
+          <a href="#quickstart" class="btn btn-primary btn-lg">Get Started Free</a>
+          <a href="https://github.com/bobmatnyc/ai-code-review" target="_blank" rel="noopener" class="btn btn-ghost btn-lg">
+            ⭐ Star on GitHub
+          </a>
+        </div>
+        <div class="cta-install-snippet">
+          <code>npm install -g @bobmatnyc/ai-code-review</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="logo-icon">⚙️</span>
+          <span class="logo-text">AI<span class="accent">Code</span>Review</span>
+          <p>Automated code reviews powered by Google Gemini, Anthropic Claude, OpenAI, and OpenRouter.</p>
+          <div class="footer-badge">MIT License · v4.6.8</div>
+        </div>
+        <div class="footer-links">
+          <h4>Review Types</h4>
+          <ul>
+            <li><a href="#review-types">Comprehensive</a></li>
+            <li><a href="#review-types">Security</a></li>
+            <li><a href="#review-types">Performance</a></li>
+            <li><a href="#review-types">Architectural</a></li>
+            <li><a href="#review-types">Best Practices</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Languages</h4>
+          <ul>
+            <li><a href="#languages">TypeScript</a></li>
+            <li><a href="#languages">Python</a></li>
+            <li><a href="#languages">Ruby on Rails</a></li>
+            <li><a href="#languages">Flutter / Dart</a></li>
+            <li><a href="#languages">Go, Java, Rust</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://github.com/bobmatnyc/ai-code-review" target="_blank" rel="noopener">GitHub Repo</a></li>
+            <li><a href="https://www.npmjs.com/package/@bobmatnyc/ai-code-review" target="_blank" rel="noopener">npm Package</a></li>
+            <li><a href="#quickstart">Quick Start</a></li>
+            <li><a href="#demo">Live Demo</a></li>
+            <li><a href="#mcp">MCP Integration</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 AI Code Review · Robert (Masa) Matsuoka · MIT License</span>
+        <span>Built with ❤️ for developers</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

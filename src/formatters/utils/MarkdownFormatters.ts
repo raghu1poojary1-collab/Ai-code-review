@@ -1,0 +1,682 @@
+/**
+ * @fileoverview Formatters for Markdown output of code reviews.
+ *
+ * This module provides functions to format code review results as Markdown,
+ * including different formats for structured and unstructured reviews.
+ */
+
+import type { ReviewResult } from '../../types/review';
+import type { StructuredReview } from '../../types/structuredReview';
+import logger from '../../utils/logger';
+import { sanitizeContent } from '../../utils/sanitizer';
+import { formatIssue, formatSchemaIssue } from './IssueFormatters';
+import { formatCostInfo, formatMetadataSection, parseCostInfo } from './MetadataFormatter';
+import { extractModelInfo, extractModelInfoFromString } from './ModelInfoExtractor';
+
+/**
+ * Resolve display path for the review, handling consolidated and edge cases
+ * @param filePath Original file path
+ * @param reviewType Type of review
+ * @returns Display-friendly path
+ */
+function resolveDisplayPath(filePath: string | undefined, reviewType: string): string {
+  let displayPath = filePath || '';
+
+  if (!displayPath || displayPath === reviewType || displayPath === 'consolidated') {
+    // For consolidated reviews, show the full target directory path
+    displayPath = `${process.cwd()} (Current Directory)`;
+  }
+
+  return displayPath;
+}
+
+/**
+ * Handle truncated JSON content for architectural reviews
+ * @param content Content string
+ * @param review Original review result
+ * @param reviewType Type of review
+ * @param filePath File path
+ * @param timestamp Timestamp
+ * @param costInfo Cost info string
+ * @param modelInfo Model info string
+ * @returns Formatted markdown or null if not truncated
+ */
+function handleTruncatedJson(
+  content: string,
+  review: ReviewResult,
+  reviewType: string,
+  filePath: string,
+  timestamp: string,
+  costInfo: string,
+  modelInfo: string,
+): string | null {
+  const trimmedContent = content.trim();
+
+  // Check if this looks like truncated/incomplete JSON
+  if (!trimmedContent.startsWith('{') || trimmedContent.includes('}')) {
+    return null;
+  }
+
+  logger.warn('Content appears to be truncated JSON - missing closing brace');
+
+  // For architectural reviews, try to salvage what we can
+  if (reviewType === 'architectural') {
+    try {
+      const closedJson = `${trimmedContent}}}}}`; // Add multiple closing braces
+      const partialData = JSON.parse(closedJson.substring(0, closedJson.lastIndexOf('}') + 1));
+
+      if (partialData && typeof partialData === 'object') {
+        logger.info('Salvaged partial JSON data for architectural review');
+        const { formatArchitecturalReview } = require('../architecturalReviewFormatter');
+        return formatArchitecturalReview(
+          { ...review, content: JSON.stringify(partialData) },
+          'markdown',
+          [],
+        );
+      }
+    } catch (_e) {
+      // Couldn't salvage, continue with warning
+    }
+  }
+
+  // Return warning message
+  const warningMessage =
+    '⚠️ **Warning**: The AI response appears to be incomplete or truncated. ' +
+    'This may be due to token limits or API issues. Please try again or use a different model.\n\n' +
+    '**Partial response received:**\n\n';
+
+  return formatSimpleMarkdown(
+    `${warningMessage}\`\`\`json\n${content}\n\`\`\``,
+    filePath,
+    reviewType,
+    timestamp,
+    costInfo,
+    modelInfo,
+  );
+}
+
+/**
+ * Extract JSON from content, checking code blocks and raw JSON
+ * @param content Content string to parse
+ * @returns Parsed JSON object or null
+ */
+function extractJsonFromContent(content: string): any {
+  const trimmedContent = content.trim();
+
+  // Try to extract JSON from code blocks with improved regex
+  const jsonBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/g;
+  const jsonBlocks = [...trimmedContent.matchAll(jsonBlockRegex)];
+
+  if (jsonBlocks.length > 0) {
+    // Try each code block until we find valid JSON
+    for (const match of jsonBlocks) {
+      try {
+        const jsonContent = match[1].trim();
+        if (jsonContent) {
+          const parsed = JSON.parse(jsonContent);
+          logger.debug('Successfully parsed JSON from code block');
+          return parsed;
+        }
+      } catch (e) {
+        logger.debug(
+          `Failed to parse JSON from code block: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+  }
+
+  // If no valid JSON found in code blocks, try the entire content
+  if (trimmedContent.startsWith('{') && trimmedContent.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(trimmedContent);
+      logger.debug('Successfully parsed JSON from full content');
+      return parsed;
+    } catch (e) {
+      logger.debug(
+        `Failed to parse content as JSON: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Format structured data as markdown, handling different schema types
+ * @param structuredData Structured data object
+ * @param filePath File path
+ * @param reviewType Review type
+ * @param timestamp Timestamp
+ * @param costInfo Cost info string
+ * @param modelInfo Model info string
+ * @returns Formatted markdown string
+ */
+function formatStructuredData(
+  structuredData: any,
+  filePath: string,
+  reviewType: string,
+  timestamp: string,
+  costInfo: string,
+  modelInfo: string,
+): string {
+  let structuredReview: any;
+
+  if (typeof structuredData === 'string') {
+    try {
+      structuredReview = JSON.parse(structuredData);
+      logger.debug('Successfully parsed structured data string as JSON');
+    } catch (parseError) {
+      logger.warn(
+        `Failed to parse structured data as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+      );
+      return formatSimpleMarkdown('', filePath, reviewType, timestamp, costInfo, modelInfo);
+    }
+  } else {
+    structuredReview = structuredData;
+  }
+
+  // Check if the data has a 'review' property (schema-based structure)
+  if (structuredReview?.review) {
+    return formatSchemaBasedReviewAsMarkdown(
+      structuredReview,
+      filePath,
+      reviewType,
+      timestamp,
+      costInfo,
+      modelInfo,
+    );
+  }
+
+  // Validate the parsed data has expected structure
+  if (typeof structuredReview === 'object' && structuredReview !== null) {
+    return formatStructuredReviewAsMarkdown(
+      structuredReview,
+      filePath,
+      reviewType,
+      timestamp,
+      costInfo,
+      modelInfo,
+    );
+  }
+
+  logger.warn('Structured data is not an object:', typeof structuredReview);
+  return formatSimpleMarkdown('', filePath, reviewType, timestamp, costInfo, modelInfo);
+}
+
+/**
+ * Format the review as Markdown
+ * @param review Review result to format
+ * @returns Markdown string
+ */
+export function formatAsMarkdown(review: ReviewResult): string {
+  const { filePath, reviewType, content, timestamp, structuredData } = review;
+  const cost = review.costInfo || review.cost;
+  const { modelInfo } = extractModelInfo(review.modelUsed);
+  const costInfo = formatCostInfo(cost);
+
+  // For architectural reviews with diagrams, always prefer Markdown format
+  const forceMarkdown = reviewType === 'architectural' && review.metadata?.diagramRequested;
+
+  // Attempt to extract structured data from content
+  let actualStructuredData = structuredData;
+
+  if (!actualStructuredData && content && typeof content === 'string' && !forceMarkdown) {
+    // Check for truncated JSON first
+    const truncatedResult = handleTruncatedJson(
+      content,
+      review,
+      reviewType,
+      filePath || '',
+      timestamp,
+      costInfo,
+      modelInfo,
+    );
+
+    if (truncatedResult) {
+      return truncatedResult;
+    }
+
+    // Try to extract JSON from content
+    actualStructuredData = extractJsonFromContent(content);
+  }
+
+  // Format structured data if available
+  if (actualStructuredData && !forceMarkdown) {
+    try {
+      return formatStructuredData(
+        actualStructuredData,
+        filePath || '',
+        reviewType,
+        timestamp,
+        costInfo,
+        modelInfo,
+      );
+    } catch (error) {
+      logger.error(
+        `Error processing structured review data: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      // Fall through to unstructured format
+    }
+  }
+
+  // Fallback to simple markdown format
+  const sanitizedContent = sanitizeContent(content);
+  const displayPath = resolveDisplayPath(filePath, reviewType);
+  const metadataSection = formatMetadataSection(
+    reviewType,
+    timestamp,
+    modelInfo,
+    cost,
+    review.toolVersion,
+    review.commandOptions,
+    review.detectedLanguage,
+    review.detectedFramework,
+    review.frameworkVersion,
+    review.cssFrameworks,
+  );
+
+  return `# Code Review: ${displayPath}
+
+> **Review Type**: ${reviewType}
+> **Model**: ${modelInfo}
+> **Generated**: ${new Date(timestamp).toLocaleString()}
+
+---
+
+${metadataSection}
+
+${sanitizedContent}
+
+---${costInfo}
+
+*Generated by [AI Code Review Tool](https://www.npmjs.com/package/@bobmatnyc/ai-code-review) using ${modelInfo}*`;
+}
+
+/**
+ * Format a structured review as Markdown
+ * @param structuredReview Structured review data
+ * @param filePath Path to the reviewed file
+ * @param reviewType Type of review performed
+ * @param timestamp Timestamp of when the review was generated
+ * @param costInfo Cost information formatted as Markdown
+ * @param modelInfo Model information
+ * @param metadataSection Optional metadata section to include
+ * @returns Markdown string
+ */
+export function formatStructuredReviewAsMarkdown(
+  structuredReview: StructuredReview,
+  filePath: string,
+  reviewType: string,
+  timestamp: string,
+  costInfo: string,
+  modelInfo: string,
+  metadataSection?: string,
+): string {
+  // Check if the structuredReview has required properties
+  if (!structuredReview || typeof structuredReview !== 'object') {
+    console.warn('Invalid structured review data, falling back to simple format');
+    return formatSimpleMarkdown(
+      'No structured data available. The review may be in an unsupported format.',
+      filePath,
+      reviewType,
+      timestamp,
+      costInfo,
+      modelInfo,
+      metadataSection,
+    );
+  }
+
+  // Extract properties with fallbacks for missing properties
+  const summary = structuredReview.summary || 'No summary provided';
+  const issues = Array.isArray(structuredReview.issues) ? structuredReview.issues : [];
+  const recommendations = Array.isArray(structuredReview.recommendations)
+    ? structuredReview.recommendations
+    : [];
+  const positiveAspects = Array.isArray(structuredReview.positiveAspects)
+    ? structuredReview.positiveAspects
+    : [];
+
+  // Extract grade information if available
+  const grade = structuredReview.grade;
+  const gradeCategories = structuredReview.gradeCategories;
+
+  // Group issues by priority
+  const highPriorityIssues = issues.filter((issue) => issue && issue.priority === 'high');
+  const mediumPriorityIssues = issues.filter((issue) => issue && issue.priority === 'medium');
+  const lowPriorityIssues = issues.filter((issue) => issue && issue.priority === 'low');
+
+  // Format issues by priority
+  let issuesMarkdown = '';
+
+  if (highPriorityIssues.length > 0) {
+    issuesMarkdown += '### High Priority\n\n';
+    issuesMarkdown += highPriorityIssues.map((issue) => formatIssue(issue)).join('\n\n');
+    issuesMarkdown += '\n\n';
+  }
+
+  if (mediumPriorityIssues.length > 0) {
+    issuesMarkdown += '### Medium Priority\n\n';
+    issuesMarkdown += mediumPriorityIssues.map((issue) => formatIssue(issue)).join('\n\n');
+    issuesMarkdown += '\n\n';
+  }
+
+  if (lowPriorityIssues.length > 0) {
+    issuesMarkdown += '### Low Priority\n\n';
+    issuesMarkdown += lowPriorityIssues.map((issue) => formatIssue(issue)).join('\n\n');
+    issuesMarkdown += '\n\n';
+  }
+
+  // Format recommendations
+  let recommendationsMarkdown = '';
+  if (recommendations && recommendations.length > 0) {
+    recommendationsMarkdown = '## General Recommendations\n\n';
+    recommendationsMarkdown += recommendations.map((rec) => `- ${rec}`).join('\n');
+    recommendationsMarkdown += '\n\n';
+  }
+
+  // Format positive aspects
+  let positiveAspectsMarkdown = '';
+  if (positiveAspects && positiveAspects.length > 0) {
+    positiveAspectsMarkdown = '## Positive Aspects\n\n';
+    positiveAspectsMarkdown += positiveAspects.map((aspect) => `- ${aspect}`).join('\n');
+    positiveAspectsMarkdown += '\n\n';
+  }
+
+  // Use the actual file path for the review title and the reviewed field
+  // If filePath is the same as reviewType, is 'consolidated', or is undefined/empty, show the current directory path
+  let displayPath = filePath || '';
+
+  if (!displayPath || displayPath === reviewType || displayPath === 'consolidated') {
+    // For consolidated reviews, show the full target directory path
+    displayPath = `${process.cwd()} (Current Directory)`;
+  }
+
+  // Include metadata section if available
+  const metadataContent = metadataSection ? `${metadataSection}\n` : '';
+
+  // Format grade section if available
+  let gradeMarkdown = '';
+  if (grade) {
+    gradeMarkdown = `## Grade: ${grade}\n\n`;
+
+    // Add grade categories if available
+    if (gradeCategories) {
+      if (gradeCategories.functionality)
+        gradeMarkdown += `- **Functionality**: ${gradeCategories.functionality}\n`;
+      if (gradeCategories.codeQuality)
+        gradeMarkdown += `- **Code Quality**: ${gradeCategories.codeQuality}\n`;
+      if (gradeCategories.documentation)
+        gradeMarkdown += `- **Documentation**: ${gradeCategories.documentation}\n`;
+      if (gradeCategories.testing) gradeMarkdown += `- **Testing**: ${gradeCategories.testing}\n`;
+      if (gradeCategories.maintainability)
+        gradeMarkdown += `- **Maintainability**: ${gradeCategories.maintainability}\n`;
+      if (gradeCategories.security)
+        gradeMarkdown += `- **Security**: ${gradeCategories.security}\n`;
+      if (gradeCategories.performance)
+        gradeMarkdown += `- **Performance**: ${gradeCategories.performance}\n`;
+      gradeMarkdown += '\n';
+    }
+  }
+
+  return `# Code Review: ${displayPath}
+
+> **Review Type**: ${reviewType}
+> **Model**: ${modelInfo}
+> **Generated**: ${new Date(timestamp).toLocaleString()}
+
+---
+
+${metadataContent}${gradeMarkdown}## Summary
+
+${summary}
+
+## Issues
+
+${issuesMarkdown}
+${recommendationsMarkdown}${positiveAspectsMarkdown}---${costInfo}
+
+*Generated by [AI Code Review Tool](https://www.npmjs.com/package/@bobmatnyc/ai-code-review) using ${modelInfo}*`;
+}
+
+/**
+ * Format a simple markdown document with just the content
+ * Used as fallback when structured data isn't available
+ * @param content Content to include in the document
+ * @param filePath Path to the reviewed file
+ * @param reviewType Type of review performed
+ * @param timestamp Timestamp of when the review was generated
+ * @param costInfo Cost information formatted as Markdown
+ * @param modelInfo Model information
+ * @param metadataSection Optional metadata section to include
+ * @returns Markdown string
+ */
+export function formatSimpleMarkdown(
+  content: string,
+  filePath: string,
+  reviewType: string,
+  timestamp: string,
+  costInfo: string,
+  modelInfo: string,
+  metadataSection?: string,
+): string {
+  // Sanitize the content
+  const sanitizedContent = sanitizeContent(content);
+
+  // Use the actual file path for the review title and the reviewed field
+  let displayPath = filePath || '';
+
+  if (!displayPath || displayPath === reviewType || displayPath === 'consolidated') {
+    // For consolidated reviews, show the full target directory path
+    displayPath = `${process.cwd()} (Current Directory)`;
+  }
+
+  // Extract model vendor and name from modelInfo
+  const { modelVendor, modelName } = extractModelInfoFromString(modelInfo);
+
+  // Parse cost information if it's available in string form
+  const cost = parseCostInfo(costInfo);
+
+  // Include metadata section if available
+  const metadataContent = metadataSection ? `${metadataSection}\n` : '';
+
+  // Generate a metadata section with model information if not provided
+  const modelMetadata = !metadataSection
+    ? `## Metadata
+| Property | Value |
+|----------|-------|
+| Review Type | ${reviewType} |
+| Generated At | ${new Date(timestamp).toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short',
+      })} |
+| Model Provider | ${modelVendor} |
+| Model Name | ${modelName} |${
+        cost
+          ? `
+| Input Tokens | ${cost.inputTokens.toLocaleString()} |
+| Output Tokens | ${cost.outputTokens.toLocaleString()} |
+| Total Tokens | ${cost.totalTokens.toLocaleString()} |
+| Estimated Cost | ${cost.formattedCost} |`
+          : ''
+      }${
+        cost?.passCount
+          ? `
+| Multi-pass Review | ${cost.passCount} passes |`
+          : ''
+      }
+`
+    : '';
+
+  // Include this metadata section in all formats for consistency
+  const fullMetadataContent = metadataContent || modelMetadata;
+
+  return `# Code Review: ${displayPath}
+
+> **Review Type**: ${reviewType}
+> **Model**: ${modelInfo}
+> **Generated**: ${new Date(timestamp).toLocaleString()}
+
+---
+
+${fullMetadataContent}
+
+${sanitizedContent}
+
+---${costInfo}
+
+*Generated by [AI Code Review Tool](https://www.npmjs.com/package/@bobmatnyc/ai-code-review) using ${modelInfo}*`;
+}
+
+/**
+ * Format a schema-based review (with 'review' property) as Markdown
+ * @param schemaReview Schema-based review object
+ * @param filePath Path to the reviewed file
+ * @param reviewType Type of review
+ * @param timestamp Timestamp of the review
+ * @param costInfo Cost information string
+ * @param modelInfo Model information string
+ * @param metadataSection Optional metadata section
+ * @returns Formatted markdown string
+ */
+export function formatSchemaBasedReviewAsMarkdown(
+  schemaReview: any,
+  filePath: string,
+  reviewType: string,
+  timestamp: string,
+  costInfo: string,
+  modelInfo: string,
+  metadataSection?: string,
+): string {
+  // Extract the review object
+  const review = schemaReview.review;
+  if (!review || typeof review !== 'object') {
+    return formatSimpleMarkdown(
+      JSON.stringify(schemaReview, null, 2),
+      filePath,
+      reviewType,
+      timestamp,
+      costInfo,
+      modelInfo,
+      metadataSection,
+    );
+  }
+
+  // Extract files and issues
+  const files = review.files || [];
+  const summary = review.summary || {};
+
+  // Create issues sections by priority
+  const highPriorityIssues: any[] = [];
+  const mediumPriorityIssues: any[] = [];
+  const lowPriorityIssues: any[] = [];
+
+  // Collect all issues from all files
+  files.forEach((file: any) => {
+    const issues = file.issues || [];
+    issues.forEach((issue: any) => {
+      // Add file path to issue for context
+      const issueWithFile = { ...issue, filePath: file.filePath };
+
+      if (issue.priority === 'HIGH') {
+        highPriorityIssues.push(issueWithFile);
+      } else if (issue.priority === 'MEDIUM') {
+        mediumPriorityIssues.push(issueWithFile);
+      } else if (issue.priority === 'LOW') {
+        lowPriorityIssues.push(issueWithFile);
+      }
+    });
+  });
+
+  // Format the metadata section
+  let displayPath = filePath || '';
+  if (!displayPath || displayPath === reviewType || displayPath === 'consolidated') {
+    displayPath = `${process.cwd()} (Current Directory)`;
+  }
+
+  // Extract model vendor and name from modelInfo
+  const { modelVendor, modelName } = extractModelInfoFromString(modelInfo);
+
+  // Build the metadata section if not provided
+  if (!metadataSection) {
+    const formattedDate = new Date(timestamp).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short',
+    });
+
+    metadataSection = `## Metadata
+| Property | Value |
+|----------|-------|
+| Review Type | ${reviewType} |
+| Generated At | ${formattedDate} |
+| Model Provider | ${modelVendor} |
+| Model Name | ${modelName} |`;
+  }
+
+  let output = `# Code Review: ${displayPath}
+
+> **Review Type**: ${reviewType}
+> **Model**: ${modelInfo}
+> **Generated**: ${new Date(timestamp).toLocaleString()}
+
+---
+
+${metadataSection}
+
+## Review Summary
+
+`;
+
+  // Add summary counts
+  if (summary.totalIssues > 0) {
+    output += `Total issues found: **${summary.totalIssues}**
+- High Priority: ${summary.highPriorityIssues || 0}
+- Medium Priority: ${summary.mediumPriorityIssues || 0}
+- Low Priority: ${summary.lowPriorityIssues || 0}
+
+`;
+  } else {
+    output += `No issues found. The code looks good!\n\n`;
+  }
+
+  // Add issues by priority
+  if (highPriorityIssues.length > 0) {
+    output += `## High Priority Issues\n\n`;
+    highPriorityIssues.forEach((issue, index) => {
+      output += formatSchemaIssue(issue, index + 1);
+    });
+  }
+
+  if (mediumPriorityIssues.length > 0) {
+    output += `## Medium Priority Issues\n\n`;
+    mediumPriorityIssues.forEach((issue, index) => {
+      output += formatSchemaIssue(issue, index + 1);
+    });
+  }
+
+  if (lowPriorityIssues.length > 0) {
+    output += `## Low Priority Issues\n\n`;
+    lowPriorityIssues.forEach((issue, index) => {
+      output += formatSchemaIssue(issue, index + 1);
+    });
+  }
+
+  // Add cost information at the end
+  if (costInfo) {
+    output += `\n${costInfo}\n`;
+  }
+
+  // Add footer with tool information
+  output += `\n*Generated by [AI Code Review Tool](https://www.npmjs.com/package/@bobmatnyc/ai-code-review) using ${modelInfo}*`;
+
+  return output;
+}
