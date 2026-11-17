@@ -1,4 +1,4 @@
-https://github.com/raghu1poojary1-collab/Ai-code-review.git
+https://ai-code-review.embarko.app
 
 # AI Code Review v4.6.9
 
